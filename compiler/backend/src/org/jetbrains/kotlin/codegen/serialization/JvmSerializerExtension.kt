@@ -181,12 +181,10 @@ class JvmSerializerExtension(private val bindings: JvmSerializationBindings, sta
         )
 
         proto.setExtension(JvmProtoBuf.propertySignature, signature)
-        val flags = JvmFlags.getPropertyFlags(bindings.get(FIELD_MOVED_FROM_INTERFACE_COMPANION, descriptor) == true)
-        if (flags != 0) {
-            proto.setExtension(JvmProtoBuf.flags, flags)
-        }
 
-        if (JvmAbi.isInterfaceCompanionWithBackingFieldsInOuter(descriptor.containingDeclaration)) {
+        if (JvmAbi.isJvmFieldPropertyInInterfaceCompanion(descriptor)) {
+            proto.setExtension(JvmProtoBuf.flags, JvmFlags.getPropertyFlags(true))
+
             assert(!proto.hasVersionRequirement()) { "VersionRequirement should be empty for $descriptor" }
             proto.versionRequirement =
                     writeVersionRequirement(1, 2, 70, ProtoBuf.VersionRequirement.VersionKind.COMPILER_VERSION, versionRequirementTable)
