@@ -1,7 +1,7 @@
 // !LANGUAGE: +JvmFieldInInterface
 // TARGET_BACKEND: JVM
-// WITH_RUNTIME
 // WITH_REFLECT
+
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.companionObject

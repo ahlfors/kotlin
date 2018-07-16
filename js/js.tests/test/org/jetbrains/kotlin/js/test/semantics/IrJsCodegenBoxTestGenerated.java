@@ -1567,11 +1567,6 @@ public class IrJsCodegenBoxTestGenerated extends AbstractIrJsCodegenBoxTest {
                 runTest("compiler/testData/codegen/box/callableReference/bound/array.kt");
             }
 
-            @TestMetadata("boundJvmFieldInInterfaceCompanion.kt")
-            public void testBoundJvmFieldInInterfaceCompanion() throws Exception {
-                runTest("compiler/testData/codegen/box/callableReference/bound/boundJvmFieldInInterfaceCompanion.kt");
-            }
-
             @TestMetadata("companionObjectReceiver.kt")
             public void testCompanionObjectReceiver() throws Exception {
                 runTest("compiler/testData/codegen/box/callableReference/bound/companionObjectReceiver.kt");
@@ -16561,11 +16556,6 @@ public class IrJsCodegenBoxTestGenerated extends AbstractIrJsCodegenBoxTest {
                 runTest("compiler/testData/codegen/box/reflection/properties/javaStaticField.kt");
             }
 
-            @TestMetadata("jvmFieldInInterfaceCompanion.kt")
-            public void testJvmFieldInInterfaceCompanion() throws Exception {
-                runTest("compiler/testData/codegen/box/reflection/properties/jvmFieldInInterfaceCompanion.kt");
-            }
-
             @TestMetadata("kotlinPropertyInheritedInJava.kt")
             public void testKotlinPropertyInheritedInJava() throws Exception {
                 runTest("compiler/testData/codegen/box/reflection/properties/kotlinPropertyInheritedInJava.kt");
@@ -16774,6 +16764,19 @@ public class IrJsCodegenBoxTestGenerated extends AbstractIrJsCodegenBoxTest {
                 @TestMetadata("topLevelProperty.kt")
                 public void testTopLevelProperty() throws Exception {
                     runTest("compiler/testData/codegen/box/reflection/properties/getDelegate/topLevelProperty.kt");
+                }
+            }
+
+            @TestMetadata("compiler/testData/codegen/box/reflection/properties/jvmField")
+            @TestDataPath("$PROJECT_ROOT")
+            @RunWith(JUnit3RunnerWithInners.class)
+            public static class JvmField extends AbstractIrJsCodegenBoxTest {
+                private void runTest(String testDataFilePath) throws Exception {
+                    KotlinTestUtils.runTest0(this::doTest, TargetBackend.JS_IR, testDataFilePath);
+                }
+
+                public void testAllFilesPresentInJvmField() throws Exception {
+                    KotlinTestUtils.assertAllTestsPresentByMetadata(this.getClass(), new File("compiler/testData/codegen/box/reflection/properties/jvmField"), Pattern.compile("^(.+)\\.kt$"), TargetBackend.JS_IR, true);
                 }
             }
 
