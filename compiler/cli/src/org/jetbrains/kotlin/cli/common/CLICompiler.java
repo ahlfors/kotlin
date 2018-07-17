@@ -19,6 +19,7 @@ package org.jetbrains.kotlin.cli.common;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
 import kotlin.jvm.functions.Function1;
+import kotlin.text.StringsKt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.kotlin.analyzer.AnalysisResult;
@@ -32,6 +33,7 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys;
 import org.jetbrains.kotlin.config.CommonConfigurationKeysKt;
 import org.jetbrains.kotlin.config.CompilerConfiguration;
 import org.jetbrains.kotlin.config.Services;
+import org.jetbrains.kotlin.metadata.deserialization.BinaryVersion;
 import org.jetbrains.kotlin.progress.CompilationCanceledException;
 import org.jetbrains.kotlin.progress.CompilationCanceledStatus;
 import org.jetbrains.kotlin.progress.ProgressIndicatorAndCompilationCanceledStatus;
@@ -41,7 +43,10 @@ import org.jetbrains.kotlin.utils.PathUtil;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import static org.jetbrains.kotlin.cli.common.CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY;
 import static org.jetbrains.kotlin.cli.common.ExitCode.COMPILATION_ERROR;
 import static org.jetbrains.kotlin.cli.common.ExitCode.INTERNAL_ERROR;
 import static org.jetbrains.kotlin.cli.common.environment.UtilKt.setIdeaIoUseFallback;
@@ -75,7 +80,7 @@ public abstract class CLICompiler<A extends CommonCompilerArguments> extends CLI
         GroupingMessageCollector groupingCollector = new GroupingMessageCollector(messageCollector, arguments.getAllWarningsAsErrors());
 
         CompilerConfiguration configuration = new CompilerConfiguration();
-        configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, groupingCollector);
+        configuration.put(MESSAGE_COLLECTOR_KEY, groupingCollector);
         configuration.put(CLIConfigurationKeys.PERF_MANAGER, performanceManager);
         try {
             setupCommonArgumentsAndServices(configuration, arguments, services);
@@ -96,7 +101,7 @@ public abstract class CLICompiler<A extends CommonCompilerArguments> extends CLI
                 performanceManager.notifyCompilationFinished();
                 if (arguments.getReportPerf()) {
                     performanceManager.getMeasurementResults().forEach(
-                            it -> configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY).report(INFO, "PERF: " + it.render(), null)
+                            it -> configuration.get(MESSAGE_COLLECTOR_KEY).report(INFO, "PERF: " + it.render(), null)
                     );
                 }
 
@@ -148,6 +153,18 @@ public abstract class CLICompiler<A extends CommonCompilerArguments> extends CLI
         if (arguments.getReportOutputFiles()) {
             configuration.put(CommonConfigurationKeys.REPORT_OUTPUT_FILES, true);
         }
+
+        String metadataVersionString = arguments.getMetadataVersion();
+        if (metadataVersionString != null) {
+            int[] versionArray = parseMetadataVersion(metadataVersionString);
+            if (versionArray == null) {
+                configuration.getNotNull(MESSAGE_COLLECTOR_KEY).report(ERROR, "Invalid metadata version: " + metadataVersionString, null);
+            }
+            else {
+                configuration.put(CommonConfigurationKeys.METADATA_VERSION, createMetadataVersion(versionArray));
+            }
+        }
+
         @SuppressWarnings("deprecation")
         CompilerJarLocator locator = services.get(CompilerJarLocator.class);
         if (locator != null) {
@@ -157,11 +174,25 @@ public abstract class CLICompiler<A extends CommonCompilerArguments> extends CLI
         setupLanguageVersionSettings(configuration, arguments);
     }
 
+    @NotNull
+    protected abstract BinaryVersion createMetadataVersion(@NotNull int[] versionArray);
+
+    @Nullable
+    private static int[] parseMetadataVersion(@NotNull String string) {
+        List<Integer> result = new ArrayList<>(3);
+        for (String part : string.split("\\.")) {
+            Integer component = StringsKt.toIntOrNull(part);
+            if (component == null) return null;
+            result.add(component);
+        }
+        return result.stream().mapToInt(it -> it).toArray();
+    }
+
     private void setupLanguageVersionSettings(@NotNull CompilerConfiguration configuration, @NotNull A arguments) {
-
-        MessageCollector collector = configuration.getNotNull(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY);
-
-        CommonConfigurationKeysKt.setLanguageVersionSettings(configuration, arguments.configureLanguageVersionSettings(collector));
+        CommonConfigurationKeysKt.setLanguageVersionSettings(
+                configuration,
+                arguments.configureLanguageVersionSettings(configuration.getNotNull(MESSAGE_COLLECTOR_KEY))
+        );
     }
 
     @Nullable

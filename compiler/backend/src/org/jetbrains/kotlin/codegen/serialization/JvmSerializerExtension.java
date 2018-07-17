@@ -54,6 +54,7 @@ public class JvmSerializerExtension extends SerializerExtension {
     private final String moduleName;
     private final ClassBuilderMode classBuilderMode;
     private final boolean isReleaseCoroutines;
+    private final BinaryVersion metadataVersion;
 
     public JvmSerializerExtension(@NotNull JvmSerializationBindings bindings, @NotNull GenerationState state) {
         this.bindings = bindings;
@@ -65,12 +66,13 @@ public class JvmSerializerExtension extends SerializerExtension {
         this.moduleName = state.getModuleName();
         this.classBuilderMode = state.getClassBuilderMode();
         this.isReleaseCoroutines = state.getLanguageVersionSettings().supportsFeature(LanguageFeature.ReleaseCoroutines);
+        this.metadataVersion = state.getMetadataVersion();
     }
 
     @NotNull
     @Override
     public BinaryVersion getMetadataVersion() {
-        return JvmMetadataVersion.INSTANCE;
+        return metadataVersion;
     }
 
     @NotNull

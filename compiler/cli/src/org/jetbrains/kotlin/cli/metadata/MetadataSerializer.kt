@@ -48,7 +48,10 @@ import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File
 
-open class MetadataSerializer(private val dependOnOldBuiltIns: Boolean) {
+open class MetadataSerializer(
+    private val metadataVersion: BuiltInsBinaryVersion,
+    private val dependOnOldBuiltIns: Boolean
+) {
     protected var totalSize = 0
     protected var totalFiles = 0
 
@@ -132,7 +135,7 @@ open class MetadataSerializer(private val dependOnOldBuiltIns: Boolean) {
         kotlinModuleFile.writeBytes(packageTableBytes)
     }
 
-    protected open fun createSerializerExtension(): KotlinSerializerExtensionBase = MetadataSerializerExtension()
+    protected open fun createSerializerExtension(): KotlinSerializerExtensionBase = MetadataSerializerExtension(metadataVersion)
 
     private fun getPackageFilePath(packageFqName: FqName, fileName: String): String =
             packageFqName.asString().replace('.', '/') + "/" +
@@ -185,7 +188,7 @@ open class MetadataSerializer(private val dependOnOldBuiltIns: Boolean) {
         private fun serializeBuiltInsFile() {
             val stream = ByteArrayOutputStream()
             with(DataOutputStream(stream)) {
-                val version = BuiltInsBinaryVersion.INSTANCE.toArray()
+                val version = extension.metadataVersion.toArray()
                 writeInt(version.size)
                 version.forEach { writeInt(it) }
             }
