@@ -17,6 +17,11 @@ class Outer {
         }
     }
 
+    class Nested {
+        @RequireKotlin("1.1")
+        fun g() {}
+    }
+
     @RequireKotlin("1.1")
     companion object
 }

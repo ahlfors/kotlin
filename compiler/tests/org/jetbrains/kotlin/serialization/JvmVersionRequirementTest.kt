@@ -21,7 +21,8 @@ import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.config.*
 import org.jetbrains.kotlin.descriptors.ModuleDescriptor
 import org.jetbrains.kotlin.jvm.compiler.LoadDescriptorUtil
-import org.jetbrains.kotlin.metadata.ProtoBuf.VersionRequirement.VersionKind.*
+import org.jetbrains.kotlin.metadata.ProtoBuf
+import org.jetbrains.kotlin.metadata.ProtoBuf.VersionRequirement.VersionKind.COMPILER_VERSION
 import org.jetbrains.kotlin.metadata.deserialization.VersionRequirement
 import org.jetbrains.kotlin.resolve.lazy.JvmResolveUtil
 import org.jetbrains.kotlin.test.ConfigurationKind
@@ -56,83 +57,6 @@ class JvmVersionRequirementTest : AbstractVersionRequirementTest() {
             EnvironmentConfigFiles.JVM_CONFIG_FILES
         )
     ).moduleDescriptor
-
-    fun testSuspendFun() {
-        doTest(
-            VersionRequirement.Version(1, 1), DeprecationLevel.ERROR, null, LANGUAGE_VERSION, null,
-            fqNames = listOf(
-                "test.topLevel",
-                "test.Foo.member",
-                "test.Foo.<init>",
-                "test.async1",
-                "test.async2",
-                "test.async3",
-                "test.async4",
-                "test.asyncVal"
-            )
-        )
-
-        doTest(
-            VersionRequirement.Version(1, 3), DeprecationLevel.ERROR, null, LANGUAGE_VERSION, null,
-            customLanguageVersion = LanguageVersion.KOTLIN_1_3,
-            fqNames = listOf(
-                "test.topLevel",
-                "test.Foo.member",
-                "test.Foo.<init>",
-                "test.async1",
-                "test.async2",
-                "test.async3",
-                "test.async4",
-                "test.asyncVal"
-            )
-        )
-    }
-
-    fun testLanguageVersionViaAnnotation() {
-        doTest(
-            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message", LANGUAGE_VERSION, 42,
-            fqNames = listOf(
-                "test.Klass",
-                "test.Konstructor.<init>",
-                "test.Typealias",
-                "test.function",
-                "test.property"
-            )
-        )
-    }
-
-    fun testApiVersionViaAnnotation() {
-        doTest(
-            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message", API_VERSION, 42,
-            fqNames = listOf(
-                "test.Klass",
-                "test.Konstructor.<init>",
-                "test.Typealias",
-                "test.function",
-                "test.property"
-            )
-        )
-    }
-
-    fun testCompilerVersionViaAnnotation() {
-        doTest(
-            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message", COMPILER_VERSION, 42,
-            fqNames = listOf(
-                "test.Klass",
-                "test.Konstructor.<init>",
-                "test.Typealias",
-                "test.function",
-                "test.property"
-            )
-        )
-    }
-
-    fun testPatchVersion() {
-        doTest(
-            VersionRequirement.Version(1, 1, 50), DeprecationLevel.HIDDEN, null, LANGUAGE_VERSION, null,
-            fqNames = listOf("test.Klass")
-        )
-    }
 
     fun testJvmDefault() {
         doTest(

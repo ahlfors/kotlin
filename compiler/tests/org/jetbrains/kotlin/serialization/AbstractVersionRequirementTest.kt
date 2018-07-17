@@ -42,11 +42,11 @@ abstract class AbstractVersionRequirementTest : TestCaseWithTmpdir() {
                 else -> throw AssertionError("Unknown descriptor: $descriptor")
             } ?: throw AssertionError("No VersionRequirement for $descriptor")
 
-            TestCaseWithTmpdir.assertEquals(expectedVersionRequirement, requirement.version)
-            TestCaseWithTmpdir.assertEquals(expectedLevel, requirement.level)
-            TestCaseWithTmpdir.assertEquals(expectedMessage, requirement.message)
-            TestCaseWithTmpdir.assertEquals(expectedVersionKind, requirement.kind)
-            TestCaseWithTmpdir.assertEquals(expectedErrorCode, requirement.errorCode)
+            assertEquals("Incorrect version for $fqName", expectedVersionRequirement, requirement.version)
+            assertEquals("Incorrect level for $fqName", expectedLevel, requirement.level)
+            assertEquals("Incorrect message for $fqName", expectedMessage, requirement.message)
+            assertEquals("Incorrect versionKind for $fqName", expectedVersionKind, requirement.kind)
+            assertEquals("Incorrect errorCode for $fqName", expectedErrorCode, requirement.errorCode)
         }
     }
 
@@ -74,4 +74,99 @@ abstract class AbstractVersionRequirementTest : TestCaseWithTmpdir() {
     protected abstract fun compileFiles(files: List<File>, outputDirectory: File, languageVersion: LanguageVersion)
 
     protected abstract fun loadModule(directory: File): ModuleDescriptor
+
+    fun testSuspendFun() {
+        doTest(
+            VersionRequirement.Version(1, 1), DeprecationLevel.ERROR, null, ProtoBuf.VersionRequirement.VersionKind.LANGUAGE_VERSION, null,
+            fqNames = listOf(
+                "test.topLevel",
+                "test.Foo.member",
+                "test.Foo.<init>",
+                "test.async1",
+                "test.async2",
+                "test.async3",
+                "test.async4",
+                "test.asyncVal"
+            )
+        )
+
+        doTest(
+            VersionRequirement.Version(1, 3), DeprecationLevel.ERROR, null, ProtoBuf.VersionRequirement.VersionKind.LANGUAGE_VERSION, null,
+            customLanguageVersion = LanguageVersion.KOTLIN_1_3,
+            fqNames = listOf(
+                "test.topLevel",
+                "test.Foo.member",
+                "test.Foo.<init>",
+                "test.async1",
+                "test.async2",
+                "test.async3",
+                "test.async4",
+                "test.asyncVal"
+            )
+        )
+    }
+
+    fun testLanguageVersionViaAnnotation() {
+        doTest(
+            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message",
+            ProtoBuf.VersionRequirement.VersionKind.LANGUAGE_VERSION, 42,
+            fqNames = listOf(
+                "test.Klass",
+                "test.Konstructor.<init>",
+                "test.Typealias",
+                "test.function",
+                "test.property"
+            )
+        )
+    }
+
+    fun testApiVersionViaAnnotation() {
+        doTest(
+            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message", ProtoBuf.VersionRequirement.VersionKind.API_VERSION, 42,
+            fqNames = listOf(
+                "test.Klass",
+                "test.Konstructor.<init>",
+                "test.Typealias",
+                "test.function",
+                "test.property"
+            )
+        )
+    }
+
+    fun testCompilerVersionViaAnnotation() {
+        doTest(
+            VersionRequirement.Version(1, 1), DeprecationLevel.WARNING, "message",
+            ProtoBuf.VersionRequirement.VersionKind.COMPILER_VERSION, 42,
+            fqNames = listOf(
+                "test.Klass",
+                "test.Konstructor.<init>",
+                "test.Typealias",
+                "test.function",
+                "test.property"
+            )
+        )
+    }
+
+    fun testPatchVersion() {
+        doTest(
+            VersionRequirement.Version(1, 1, 50), DeprecationLevel.HIDDEN, null,
+            ProtoBuf.VersionRequirement.VersionKind.LANGUAGE_VERSION, null,
+            fqNames = listOf("test.Klass")
+        )
+    }
+
+    fun testNestedClassMembers() {
+        doTest(
+            VersionRequirement.Version(1, 1), DeprecationLevel.ERROR, null, ProtoBuf.VersionRequirement.VersionKind.LANGUAGE_VERSION, null,
+            fqNames = listOf(
+                "test.Outer.Inner.Deep",
+                "test.Outer.Inner.Deep.<init>",
+                "test.Outer.Inner.Deep.f",
+                "test.Outer.Inner.Deep.x",
+                "test.Outer.Inner.Deep.s",
+                "test.Outer.Nested.g",
+                "test.Outer.Companion"
+            )
+        )
+    }
 }

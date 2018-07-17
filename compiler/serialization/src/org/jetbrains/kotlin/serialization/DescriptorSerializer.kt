@@ -742,9 +742,10 @@ class DescriptorSerializer private constructor(
             parentSerializer: DescriptorSerializer?
         ): DescriptorSerializer {
             val container = descriptor.containingDeclaration
-            val parent = parentSerializer
-                ?: (container as? ClassDescriptor)?.let { create(it, extension, null) }
-                ?: createTopLevel(extension)
+            val parent = if (container is ClassDescriptor)
+                parentSerializer ?: create(container, extension, null)
+            else
+                createTopLevel(extension)
 
             // Calculate type parameter ids for the outer class beforehand, as it would've had happened if we were always
             // serializing outer classes before nested classes.
