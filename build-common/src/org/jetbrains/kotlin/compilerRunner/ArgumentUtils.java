@@ -26,6 +26,7 @@ import kotlin.reflect.jvm.ReflectJvmMapping;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.cli.common.arguments.Argument;
 import org.jetbrains.kotlin.cli.common.arguments.CommonToolArguments;
+import org.jetbrains.kotlin.cli.common.arguments.InternalArgument;
 import org.jetbrains.kotlin.cli.common.arguments.ParseCommandLineArgumentsKt;
 import org.jetbrains.kotlin.utils.StringsKt;
 
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ArgumentUtils {
     private ArgumentUtils() {}
@@ -46,7 +48,11 @@ public class ArgumentUtils {
         Class<? extends CommonToolArguments> argumentsClass = arguments.getClass();
         convertArgumentsToStringList(arguments, argumentsClass.newInstance(), JvmClassMappingKt.getKotlinClass(argumentsClass), result);
         result.addAll(arguments.getFreeArgs());
-        result.addAll(arguments.getInternalArguments());
+        result.addAll(
+                arguments.getInternalArguments().stream()
+                        .map(InternalArgument::getStringRepresentation)
+                        .collect(Collectors.toList())
+        );
         return result;
     }
 
